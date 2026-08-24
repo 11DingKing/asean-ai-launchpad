@@ -112,14 +112,13 @@ func (s *Service) Authenticate(ctx context.Context, token string) (requestctx.Pr
 }
 
 func (s *Service) Logout(ctx context.Context, sessionID string) error {
-	actor, err := principal(ctx)
-	if err != nil {
+	if _, err := principal(ctx); err != nil {
 		return err
 	}
 	if sessionID == "" {
 		return domain.ErrUnauthorized
 	}
-	return s.Store.RevokeUserSessions(ctx, actor.UserID, s.Clock.Now())
+	return s.Store.RevokeSession(ctx, sessionID, s.Clock.Now())
 }
 
 func (s *Service) CleanupSessions(ctx context.Context) (int64, error) {
