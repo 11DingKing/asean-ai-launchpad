@@ -115,11 +115,11 @@ func applyOne(ctx context.Context, db *sql.DB, item migration) error {
 	if _, err := tx.ExecContext(ctx, item.SQL); err != nil {
 		return fmt.Errorf("execute migration %d: %w", item.Version, err)
 	}
+	if _, err := tx.ExecContext(ctx, `INSERT INTO schema_migrations(version, name, applied_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`, item.Version, item.Name); err != nil {
+		return fmt.Errorf("record migration %d: %w", item.Version, err)
+	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit migration %d: %w", item.Version, err)
-	}
-	if _, err := db.ExecContext(ctx, `INSERT INTO schema_migrations(version, name, applied_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`, item.Version, item.Name); err != nil {
-		return fmt.Errorf("record migration %d after schema commit: %w", item.Version, err)
 	}
 	return nil
 }
